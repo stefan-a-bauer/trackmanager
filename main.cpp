@@ -6,6 +6,8 @@
 #include <KMessageBox>
 #include <KLocale>
 
+#include "mainwindow.h"
+
 int main (int argc, char *argv[])
 {
     KAboutData aboutData(
@@ -22,5 +24,9 @@ int main (int argc, char *argv[])
 
     KCmdLineArgs::init( argc, argv, &aboutData );
     KApplication app;
-    return  EXIT_SUCCESS;
+
+    MainWindow* window = new MainWindow();
+    window->show();
+
+    return app.exec();
 }
