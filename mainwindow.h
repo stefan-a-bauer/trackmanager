@@ -3,13 +3,16 @@
 
 #include <KXmlGuiWindow>
 #include <KTextEdit>
+#include <marble/MarbleWidget.h>
 
 class MainWindow : public KXmlGuiWindow
 {
   public:
     MainWindow(QWidget *parent=0);
+    ~MainWindow();
 
   private:
+    Marble::MarbleWidget *_marble;
 
 };
 
