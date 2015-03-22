@@ -30,3 +30,21 @@ Makefile*
 #QtCtreator Qml
 *.qmlproject.user
 *.qmlproject.user.*
+
+# vi
+*.swp
+
+# cmake
+CMakeCache.txt
+CMakeFiles/
+CMakeTmp/
+CTestTestfile.cmake
+cmake_install.cmake
+cmake_uninstall.cmake
+
+# trackmanager
+trackmanager
+trackmanager.shell
+trackmanager_automoc.cpp
+trackmanager_automoc.cpp.files
+
