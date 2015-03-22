@@ -36,6 +36,7 @@ Makefile*
 
 # cmake
 CMakeCache.txt
+CMakeLists.txt.user
 CMakeFiles/
 CMakeTmp/
 CTestTestfile.cmake
