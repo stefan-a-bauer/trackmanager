@@ -8,11 +8,10 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-  public:
+public:
     MainWindow();
-    ~MainWindow();
 
-  private:
+private:
     Marble::MarbleWidget *_marble;
 };
 

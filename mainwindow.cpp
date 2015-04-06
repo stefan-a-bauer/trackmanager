@@ -7,8 +7,3 @@ MainWindow::MainWindow()
     _marble->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
     setCentralWidget(_marble);
 }
-
-MainWindow::~MainWindow()
-{
-    delete _marble;
-}
