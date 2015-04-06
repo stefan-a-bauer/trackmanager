@@ -1,12 +1,11 @@
 #include "mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent) : KXmlGuiWindow(parent)
+MainWindow::MainWindow()
 {
-    _marble = new Marble::MarbleWidget(parent);
+    _marble = new Marble::MarbleWidget();
     _marble->setProjection(Marble::Mercator);
     _marble->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
     setCentralWidget(_marble);
-    setupGUI();
 }
 
 MainWindow::~MainWindow()

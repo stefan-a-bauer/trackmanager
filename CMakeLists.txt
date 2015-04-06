@@ -1,14 +1,28 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
+
 project (trackmanager)
+
+find_package(Qt4 REQUIRED)
+
+# This adds the KDE data dir to CMAKE_MODULE_PATH. Only so the FindMarble.cmake is found.
 find_package(KDE4 REQUIRED)
 find_package(Marble REQUIRED)
-include (KDE4Defaults)
-include_directories(${KDE4_INCLUDES})
+
 include_directories(${MARBLE_INCLUDE_DIR})
+
 set(trackmanager_SRCS
   main.cpp
   mainwindow.cpp)
-kde4_add_executable(trackmanager ${trackmanager_SRCS})
-target_link_libraries(trackmanager ${KDE4_KDEUI_LIBS} ${MARBLE_LIBRARIES})
-install(TARGETS trackmanager  ${INSTALL_TARGETS_DEFAULT_ARGS})
 
+set(trackmanager_HEADERS
+  mainwindow.h)
+
+QT4_WRAP_CPP(trackmanager_HEADERS_MOC ${trackmanager_HEADERS})
+
+INCLUDE(${QT_USE_FILE})
+
+ADD_DEFINITIONS(${QT_DEFINITIONS})
+
+add_executable(trackmanager ${trackmanager_SRCS} ${trackmanager_HEADERS_MOC})
+
+target_link_libraries(trackmanager ${QT_LIBRARIES} ${MARBLE_LIBRARIES})

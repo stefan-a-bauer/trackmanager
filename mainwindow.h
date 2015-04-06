@@ -1,19 +1,19 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <KXmlGuiWindow>
-#include <KTextEdit>
+#include <QMainWindow>
 #include <marble/MarbleWidget.h>
 
-class MainWindow : public KXmlGuiWindow
+class MainWindow : public QMainWindow
 {
+    Q_OBJECT
+
   public:
-    MainWindow(QWidget *parent=0);
+    MainWindow();
     ~MainWindow();
 
   private:
     Marble::MarbleWidget *_marble;
-
 };
 
 #endif // MAINWINDOW_H
