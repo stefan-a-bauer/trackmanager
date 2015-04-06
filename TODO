@@ -1,0 +1,27 @@
+- Tracks and waypoints stored in GPX files can be imported
+- Tracks are related to transportation mode and vehicle
+- Tracks are displayed on the map
+- Tracks can be picked from the map
+- For each track statistical data is accessible
+	- average speed
+	- maximum speed
+	- distance traveled
+	- moving time
+	- overall time
+	- climb
+	- descent
+- Time-related statistical data is accessible per
+	- transportation mode
+	- vehicle
+- Each track can be rated
+- For each track a velocity chart can be shown
+- For each track an altitude chart can be shown
+- Mouse hovering over the altitude and velocity charts moves a map marker
+- Tracks can be searched by
+	- Rating
+	- Length
+	- Climb
+	- Location
+- Device measured height data can be corrected with SRTM data
+- Maintenance activity can be logged for each vehicle
+
