@@ -1,9 +1,13 @@
 #include "mainwindow.h"
 
+#include <QFileDialog>
 #include <QMenuBar>
 
-MainWindow::MainWindow()
+MainWindow::MainWindow(AbstractModel *model, AbstractImporter *importer)
 {
+    _model = model;
+    _importer = importer;
+
     _marble = new Marble::MarbleWidget();
     _marble->setProjection(Marble::Mercator);
     _marble->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
@@ -17,5 +21,9 @@ MainWindow::MainWindow()
 
 void MainWindow::import()
 {
-
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select file to import"));
+    if (!fileName.isEmpty())
+    {
+        _importer->Import(_model, fileName);
+    }
 }

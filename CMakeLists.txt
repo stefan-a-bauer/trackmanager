@@ -11,11 +11,21 @@ find_package(Marble REQUIRED)
 include_directories(${MARBLE_INCLUDE_DIR})
 
 set(trackmanager_SRCS
-  main.cpp
-  mainwindow.cpp)
+    abstractimporter.cpp
+    abstractmodel.cpp
+    gpximporter.cpp
+    main.cpp
+    mainwindow.cpp
+    model.cpp
+)
 
 set(trackmanager_HEADERS
-  mainwindow.h)
+    abstractimporter.h
+    abstractmodel.h
+    gpximporter.h
+    mainwindow.h
+    model.h
+)
 
 QT4_WRAP_CPP(trackmanager_HEADERS_MOC ${trackmanager_HEADERS})
 

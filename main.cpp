@@ -1,12 +1,17 @@
 #include <QApplication>
 
+#include "gpximporter.h"
 #include "mainwindow.h"
+#include "model.h"
 
 int main (int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    MainWindow mainWindow;
+    Model model;
+    GpxImporter importer;
+
+    MainWindow mainWindow(&model, &importer);
 
     mainWindow.show();
 
