@@ -2,6 +2,7 @@
 
 #include <QFileDialog>
 #include <QMenuBar>
+#include <QSettings>
 
 MainWindow::MainWindow(AbstractModel *model, AbstractImporter *importer)
 {
@@ -21,9 +22,17 @@ MainWindow::MainWindow(AbstractModel *model, AbstractImporter *importer)
 
 void MainWindow::import()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select file to import"));
+    QSettings settings;
+
+    QString lastImportedFileKey = "lastImportedFile";
+
+    QString lastImportedFile = settings.value(lastImportedFileKey).toString();
+
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select file to import"), lastImportedFile);
+
     if (!fileName.isEmpty())
     {
+        settings.setValue(lastImportedFileKey, fileName);
         _importer->Import(_model, fileName);
     }
 }

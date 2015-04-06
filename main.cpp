@@ -6,6 +6,9 @@
 
 int main (int argc, char *argv[])
 {
+    QCoreApplication::setOrganizationName("Stefan Bauer");
+    QCoreApplication::setApplicationName("trackmanager");
+
     QApplication app(argc, argv);
 
     Model model;
