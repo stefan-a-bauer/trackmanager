@@ -120,8 +120,8 @@ void ParseTrack(Repository &repository, const QDomElement &element, pkey_t tourI
     QDomElement nameElement = element.firstChildElement("name");
     QDomElement descriptionElement = element.firstChildElement("desc");
 
-    QString name = nameElement.isText() ? nameElement.text() : QString();
-    QString description = descriptionElement.isText() ? descriptionElement.text() : QString();
+    QString name = nameElement.text();
+    QString description = descriptionElement.text();
 
     auto trackId = repository.createTrack(name, description, tourId, gear, activity);
 
