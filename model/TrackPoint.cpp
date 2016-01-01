@@ -6,3 +6,7 @@ TrackPoint::TrackPoint(pkey_t id, double lat, double lon, double elevation, cons
     m_trackId(track.getId())
 {
 }
+
+TrackPoint::~TrackPoint()
+{
+}

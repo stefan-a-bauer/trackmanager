@@ -6,3 +6,7 @@ Point::Point(double lat, double lon, double elevation, const QDateTime &time) :
     m_time(time)
 {
 }
+
+Point::~Point()
+{
+}
