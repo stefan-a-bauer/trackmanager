@@ -53,8 +53,10 @@ public:
 
     QList<Activity> getActivities();
     QList<Gear> getGear();
+    QList<Tour> getTours();
     QList<Track> getTracks();
     QList<TrackPoint> getTrackPoints(const Track &track);
+    QList<WayPoint> getWayPoints(const Tour &tour);
 
 private:
     QSqlDatabase m_db;

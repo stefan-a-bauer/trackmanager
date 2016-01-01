@@ -398,6 +398,28 @@ QList<Gear> Repository::getGear()
     return gear;
 }
 
+QList<Tour> Repository::getTours()
+{
+    QSqlQuery query(QString("SELECT * FROM " TABLE_TOUR ";"));
+
+    if (!query.exec())
+    {
+        throw Exception(query.lastError().text());
+    }
+
+    QList<Tour> tours;
+
+    while (query.next())
+    {
+        pkey_t id = query.value(0).toLongLong();
+        auto name = query.value(1).toString();
+        auto description = query.value(2).toString();
+        tours.append(Tour(id, name, description));
+    }
+
+    return tours;
+}
+
 QList<Track> Repository::getTracks()
 {
     QSqlQuery query(QString("SELECT * FROM " TABLE_TRACK ";"));
@@ -457,6 +479,44 @@ QList<TrackPoint> Repository::getTrackPoints(const Track &track)
     }
 
     return trackPoints;
+}
+
+QList<WayPoint> Repository::getWayPoints(const Tour &tour)
+{
+    QStringList columns;
+    columns << COLUMNNAME_ID;
+    columns << COLUMNNAME_NAME;
+    columns << COLUMNNAME_TIME;
+    columns << "ST_X(p." COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Y(p." COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Z(p." COLUMNNAME_GEOMETRY ")";
+
+    QString queryString = QString(
+        "SELECT %1 FROM " TABLE_WAYPOINT " AS p "
+        "WHERE p." COLUMNNAME_TOURID " = %2;").arg(columns.join(", ")).arg(tour.getId());
+
+    QSqlQuery query(queryString);
+
+    if (!query.exec())
+    {
+        throw Exception(query.lastError().text());
+    }
+
+    QList<WayPoint> wayPoints;
+
+    while (query.next())
+    {
+        pkey_t id = query.value(0).toLongLong();
+        auto name = query.value(1).toString();
+        auto time = QDateTime::fromTime_t(query.value(2).toUInt());
+        auto lon = query.value(3).toDouble();
+        auto lat = query.value(4).toDouble();
+        auto elevation = query.value(5).toDouble();
+
+        wayPoints.append(WayPoint(id, name, lat, lon, elevation, time, tour));
+    }
+
+    return wayPoints;
 }
 
 pkey_t Repository::insert(const QString &table, const QStringList &columns, const QList<QVariant> &bindValues)
