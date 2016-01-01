@@ -6,6 +6,7 @@
 #include <QSettings>
 
 #include "Exception.h"
+#include "Layer.h"
 
 MainWindow::MainWindow(Repository *repository, AbstractImporter *importer)
 {
@@ -16,6 +17,9 @@ MainWindow::MainWindow(Repository *repository, AbstractImporter *importer)
     m_marble->setProjection(Marble::Mercator);
     m_marble->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
     setCentralWidget(m_marble);
+
+    auto layer = new Layer(this, repository);
+    m_marble->addLayer(layer);
 
     m_importAction = new QAction(tr("&Import..."), this);
     connect(m_importAction, SIGNAL(triggered()), this, SLOT(import()));
