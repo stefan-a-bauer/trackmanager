@@ -3,9 +3,9 @@
 
 #include <QtSql/QSqlDatabase>
 #include <QVariant>
-#include "model/TrackPoint.h"
-#include "model/WayPoint.h"
-#include "model/Highlight.h"
+#include "TrackPoint.h"
+#include "WayPoint.h"
+#include "Highlight.h"
 
 class Repository
 {

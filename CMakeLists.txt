@@ -12,7 +12,12 @@ find_package(Marble REQUIRED)
 
 find_package(SQLite REQUIRED)
 
-include_directories(${MARBLE_INCLUDE_DIR})
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/model
+    ${CMAKE_CURRENT_SOURCE_DIR}/ui
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${MARBLE_INCLUDE_DIR}
+)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -std=c++11")
 
@@ -29,11 +34,11 @@ set(trackmanager_SRCS
     model/Track.cpp
     model/TrackPoint.cpp
     model/WayPoint.cpp
+    ui/mainwindow.cpp
     Exception.cpp
     abstractimporter.cpp
     gpximporter.cpp
     main.cpp
-    mainwindow.cpp
     Repository.cpp
 )
 
@@ -50,10 +55,10 @@ set(trackmanager_HEADERS
     model/Track.h
     model/TrackPoint.h
     model/WayPoint.h
+    ui/mainwindow.h
     abstractimporter.h
     Exception.h
     gpximporter.h
-    mainwindow.h
     Repository.h
     types.h
 )
