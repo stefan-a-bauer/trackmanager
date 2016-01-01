@@ -2,37 +2,66 @@
 
 #include <QFileDialog>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QSettings>
 
-MainWindow::MainWindow(AbstractModel *model, AbstractImporter *importer)
+#include "Exception.h"
+
+MainWindow::MainWindow(Repository *repository, AbstractImporter *importer)
 {
-    _model = model;
-    _importer = importer;
+    m_repository = repository;
+    m_importer = importer;
 
-    _marble = new Marble::MarbleWidget();
-    _marble->setProjection(Marble::Mercator);
-    _marble->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
-    setCentralWidget(_marble);
+    m_marble = new Marble::MarbleWidget();
+    m_marble->setProjection(Marble::Mercator);
+    m_marble->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
+    setCentralWidget(m_marble);
 
-    _importAction = new QAction(tr("&Import..."), this);
-    connect(_importAction, SIGNAL(triggered()), this, SLOT(import()));
-    _fileMenu = menuBar()->addMenu(tr("&File"));
-    _fileMenu->addAction(_importAction);
+    m_importAction = new QAction(tr("&Import..."), this);
+    connect(m_importAction, SIGNAL(triggered()), this, SLOT(import()));
+    m_fileMenu = menuBar()->addMenu(tr("&File"));
+    m_fileMenu->addAction(m_importAction);
 }
 
 void MainWindow::import()
 {
-    QSettings settings;
-
-    QString lastImportedFileKey = "lastImportedFile";
-
-    QString lastImportedFile = settings.value(lastImportedFileKey).toString();
-
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select file to import"), lastImportedFile);
-
-    if (!fileName.isEmpty())
+    try
     {
-        settings.setValue(lastImportedFileKey, fileName);
-        _importer->Import(_model, fileName);
+        QSettings settings;
+
+        QString lastImportedFileKey = "lastImportedFile";
+
+        QString lastImportedFile = settings.value(lastImportedFileKey).toString();
+
+        QString fileName = QFileDialog::getOpenFileName(this, tr("Select file to import"), lastImportedFile);
+
+        if (!fileName.isEmpty())
+        {
+            settings.setValue(lastImportedFileKey, fileName);
+
+            QList<Activity> activities = m_repository->getActivities();
+
+            if (activities.length() == 0)
+            {
+                m_repository->createActivity("Default Activity");
+                activities = m_repository->getActivities();
+            }
+
+            const Activity &activity = activities.first();
+
+            QList<Gear> gear = m_repository->getGear();
+
+            if (gear.length() == 0)
+            {
+                m_repository->createGear("Default Gear", activity);
+                gear = m_repository->getGear();
+            }
+
+            m_importer->Import(*m_repository, fileName, gear.first(), activity);
+        }
+    }
+    catch (Exception &exception)
+    {
+        QMessageBox::critical(this, tr("Failed to import file"), exception.what());
     }
 }

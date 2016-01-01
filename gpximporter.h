@@ -3,13 +3,15 @@
 
 #include "abstractimporter.h"
 
+#include <QDomElement>
+
 class GpxImporter : public AbstractImporter
 {
 public:
     GpxImporter();
     ~GpxImporter();
 
-    virtual void Import(AbstractModel *model, const QString &fileName);
+    virtual pkey_t Import(Repository &repository, const QString &fileName, const Gear &gear, const Activity &activity);
 };
 
 #endif // GPXIMPORTER_H

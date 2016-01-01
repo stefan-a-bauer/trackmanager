@@ -31,11 +31,10 @@ set(trackmanager_SRCS
     model/WayPoint.cpp
     Exception.cpp
     abstractimporter.cpp
-    abstractmodel.cpp
     gpximporter.cpp
     main.cpp
     mainwindow.cpp
-    model.cpp
+    Repository.cpp
 )
 
 set(trackmanager_HEADERS
@@ -52,11 +51,10 @@ set(trackmanager_HEADERS
     model/TrackPoint.h
     model/WayPoint.h
     abstractimporter.h
-    abstractmodel.h
     Exception.h
     gpximporter.h
     mainwindow.h
-    model.h
+    Repository.h
     types.h
 )
 

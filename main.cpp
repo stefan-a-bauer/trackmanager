@@ -2,7 +2,7 @@
 
 #include "gpximporter.h"
 #include "mainwindow.h"
-#include "model.h"
+#include "Repository.h"
 
 int main (int argc, char *argv[])
 {
@@ -11,12 +11,29 @@ int main (int argc, char *argv[])
 
     QApplication app(argc, argv);
 
-    Model model;
-    GpxImporter importer;
+    Repository repository;
 
-    MainWindow mainWindow(&model, &importer);
+    int exitCode;
 
-    mainWindow.show();
+    try
+    {
+        repository.open();
 
-    return app.exec();
+        GpxImporter importer;
+
+        MainWindow mainWindow(&repository, &importer);
+
+        mainWindow.show();
+
+        exitCode = app.exec();
+    }
+    catch (std::exception &exception)
+    {
+        qDebug("%s\n", exception.what());
+        exitCode = 1;
+    }
+
+    repository.close();
+
+    return exitCode;
 }

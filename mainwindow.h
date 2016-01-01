@@ -6,7 +6,7 @@
 #include <marble/MarbleWidget.h>
 
 #include "abstractimporter.h"
-#include "abstractmodel.h"
+#include "Repository.h"
 
 class MainWindow : public QMainWindow
 {
@@ -14,19 +14,19 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(
-            AbstractModel *model,
+            Repository *repository,
             AbstractImporter *importer);
 
 private slots:
     void import();
 
 private:
-    AbstractModel *_model;
-    AbstractImporter *_importer;
+    Repository *m_repository;
+    AbstractImporter *m_importer;
 
-    Marble::MarbleWidget *_marble;
-    QMenu *_fileMenu;
-    QAction *_importAction;
+    Marble::MarbleWidget *m_marble;
+    QMenu *m_fileMenu;
+    QAction *m_importAction;
 };
 
 #endif // MAINWINDOW_H

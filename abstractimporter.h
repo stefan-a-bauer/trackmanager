@@ -3,7 +3,7 @@
 
 #include <QString>
 
-#include "abstractmodel.h"
+#include "Repository.h"
 
 class AbstractImporter
 {
@@ -11,7 +11,7 @@ public:
     AbstractImporter();
     virtual ~AbstractImporter();
 
-    virtual void Import(AbstractModel *model, const QString &fileName) = 0;
+    virtual pkey_t Import(Repository &repository, const QString &fileName, const Gear &gear, const Activity &activity) = 0;
 };
 
 #endif // ABSTRACTIMPORTER_H
