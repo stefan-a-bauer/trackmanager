@@ -17,6 +17,18 @@ include_directories(${MARBLE_INCLUDE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -std=c++11")
 
 set(trackmanager_SRCS
+    model/Activity.cpp
+    model/Entity.cpp
+    model/DescribedEntity.cpp
+    model/Gear.cpp
+    model/Highlight.cpp
+    model/NamedEntity.cpp
+    model/Point.cpp
+    model/Position.cpp
+    model/Tour.cpp
+    model/Track.cpp
+    model/TrackPoint.cpp
+    model/WayPoint.cpp
     Exception.cpp
     abstractimporter.cpp
     abstractmodel.cpp
@@ -27,6 +39,18 @@ set(trackmanager_SRCS
 )
 
 set(trackmanager_HEADERS
+    model/Activity.h
+    model/DescribedEntity.h
+    model/Entity.h
+    model/NamedEntity.h
+    model/Gear.h
+    model/Highlight.h
+    model/Point.h
+    model/Position.h
+    model/Tour.h
+    model/Track.h
+    model/TrackPoint.h
+    model/WayPoint.h
     abstractimporter.h
     abstractmodel.h
     Exception.h
