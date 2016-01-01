@@ -12,3 +12,7 @@ WayPoint::WayPoint(pkey_t id,
     m_tourId(tour.getId())
 {
 }
+
+WayPoint::~WayPoint()
+{
+}
