@@ -70,6 +70,8 @@ void Repository::open()
 
     QString dbPath(trackmanagerPath + "/data.db");
 
+    bool dbExists = QFile(dbPath).exists();
+
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName(dbPath);
 
@@ -81,6 +83,16 @@ void Repository::open()
     execute("PRAGMA foreign_keys = ON;");
 
     loadSpatialite();
+
+    if (!dbExists)
+    {
+        init();
+    }
+}
+
+void Repository::init()
+{
+    execute("SELECT InitSpatialMetaData('WGS84');");
 
     QList< QPair<QByteArray, QByteArray> > tables;
 
@@ -566,8 +578,6 @@ void Repository::loadSpatialite()
         sqlite3_free(error);
         throw Exception(msg);
     }
-
-    execute("SELECT InitSpatialMetaData('WGS84');");
 
     if (sqlite3_enable_load_extension(handle, 0) != SQLITE_OK)
     {

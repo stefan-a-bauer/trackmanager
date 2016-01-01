@@ -61,6 +61,7 @@ private:
 
     void execute(const QString &sql);
     void loadSpatialite();
+    void init();
     void createTable(const char *name, const char *columns);
     pkey_t insert(const QString &table, const QStringList &columns, const QStringList &values, const QList<QVariant> &bindValues);
     pkey_t insert(const QString &table, const QStringList &columns, const QList<QVariant> &bindValues);
