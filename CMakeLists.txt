@@ -33,6 +33,7 @@ set(trackmanager_HEADERS
     gpximporter.h
     mainwindow.h
     model.h
+    types.h
 )
 
 QT4_WRAP_CPP(trackmanager_HEADERS_MOC ${trackmanager_HEADERS})
