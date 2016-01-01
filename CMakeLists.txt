@@ -4,7 +4,7 @@ project (trackmanager)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-find_package(Qt4 REQUIRED)
+find_package(Qt4 COMPONENTS QtCore QtGUI QtSql QtXml REQUIRED)
 
 # This adds the KDE data dir to CMAKE_MODULE_PATH. Only so the FindMarble.cmake is found.
 find_package(KDE4 REQUIRED)
