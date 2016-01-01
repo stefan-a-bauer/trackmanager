@@ -1,16 +1,15 @@
 #include "Track.h"
 
-Track::Track(
-    pkey_t id,
+Track::Track(pkey_t id,
     const QString &name,
     const QString &description,
-    const Tour &tour,
-    const Gear &gear,
-    const Activity &activity) :
+    pkey_t tourId,
+    pkey_t gearId,
+    pkey_t activityId) :
     DescribedEntity(id, name, description),
-    m_tourId(tour.getId()),
-    m_gearId(gear.getId()),
-    m_activityId(activity.getId())
+    m_tourId(tourId),
+    m_gearId(gearId),
+    m_activityId(activityId)
 {
 }
 

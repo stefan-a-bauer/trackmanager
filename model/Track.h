@@ -12,9 +12,9 @@ public:
         pkey_t id,
         const QString &name,
         const QString &description,
-        const Tour &tour,
-        const Gear &gear,
-        const Activity &activity);
+        pkey_t tourId,
+        pkey_t gearId,
+        pkey_t activityId);
 
     ~Track();
 
