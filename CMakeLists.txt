@@ -34,6 +34,7 @@ set(trackmanager_SRCS
     model/Track.cpp
     model/TrackPoint.cpp
     model/WayPoint.cpp
+    ui/Layer.cpp
     ui/mainwindow.cpp
     Exception.cpp
     abstractimporter.cpp
@@ -55,6 +56,7 @@ set(trackmanager_HEADERS
     model/Track.h
     model/TrackPoint.h
     model/WayPoint.h
+    ui/Layer.h
     ui/mainwindow.h
     abstractimporter.h
     Exception.h
