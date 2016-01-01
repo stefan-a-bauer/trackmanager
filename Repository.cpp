@@ -345,15 +345,11 @@ pkey_t Repository::createHighlight(
 
 QList<Activity> Repository::getActivities()
 {
-    QStringList columns;
-    columns << COLUMNNAME_ID;
-    columns << COLUMNNAME_NAME;
-
-    QSqlQuery query(QString("SELECT %1 FROM " TABLE_ACTIVITY ";").arg(columns.join(", ")));
+    QSqlQuery query(QString("SELECT * FROM " TABLE_ACTIVITY ";"));
 
     if (!query.exec())
     {
-        throw "SQL failed.";
+        throw Exception(query.lastError().text());
     }
 
     QList<Activity> activities;
@@ -370,16 +366,11 @@ QList<Activity> Repository::getActivities()
 
 QList<Gear> Repository::getGear()
 {
-    QStringList columns;
-    columns << COLUMNNAME_ID;
-    columns << COLUMNNAME_NAME;
-    columns << COLUMNNAME_ACTIVITYID;
-
-    QSqlQuery query(QString("SELECT %1 FROM " TABLE_GEAR ";").arg(columns.join(", ")));
+    QSqlQuery query(QString("SELECT * FROM " TABLE_GEAR ";"));
 
     if (!query.exec())
     {
-        throw "SQL failed.";
+        throw Exception(query.lastError().text());
     }
 
     QList<Gear> gear;
@@ -388,7 +379,7 @@ QList<Gear> Repository::getGear()
     {
         pkey_t id = query.value(0).toLongLong();
         QString name = query.value(1).toString();
-        quint64 activityId = query.value(2).toLongLong();
+        pkey_t activityId = query.value(2).toLongLong();
         gear.append(Gear(id, name, activityId));
     }
 
