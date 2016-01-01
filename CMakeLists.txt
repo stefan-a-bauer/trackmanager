@@ -17,6 +17,7 @@ include_directories(${MARBLE_INCLUDE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -std=c++11")
 
 set(trackmanager_SRCS
+    Exception.cpp
     abstractimporter.cpp
     abstractmodel.cpp
     gpximporter.cpp
@@ -28,6 +29,7 @@ set(trackmanager_SRCS
 set(trackmanager_HEADERS
     abstractimporter.h
     abstractmodel.h
+    Exception.h
     gpximporter.h
     mainwindow.h
     model.h
