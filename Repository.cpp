@@ -386,6 +386,67 @@ QList<Gear> Repository::getGear()
     return gear;
 }
 
+QList<Track> Repository::getTracks()
+{
+    QSqlQuery query(QString("SELECT * FROM " TABLE_TRACK ";"));
+
+    if (!query.exec())
+    {
+        throw Exception(query.lastError().text());
+    }
+
+    QList<Track> tracks;
+
+    while (query.next())
+    {
+        pkey_t id = query.value(0).toLongLong();
+        QString name = query.value(1).toString();
+        QString description = query.value(2).toString();
+        pkey_t tourId = query.value(3).toLongLong();
+        pkey_t gearId = query.value(4).toLongLong();
+        pkey_t activityId = query.value(5).toLongLong();
+        tracks.append(Track(id, name, description, tourId, gearId, activityId));
+    }
+
+    return tracks;
+}
+
+QList<TrackPoint> Repository::getTrackPoints(const Track &track)
+{
+    QStringList columns;
+    columns << COLUMNNAME_ID;
+    columns << COLUMNNAME_TIME;
+    columns << "ST_X(p." COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Y(p." COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Z(p." COLUMNNAME_GEOMETRY ")";
+
+    QString queryString = QString(
+        "SELECT %1 FROM " TABLE_TRACKPOINT " AS p "
+        "WHERE p." COLUMNNAME_TRACKID " = %2;").arg(columns.join(", ")).arg(track.getId());
+
+    QSqlQuery query(queryString);
+
+    if (!query.exec())
+    {
+        throw Exception(query.lastError().text());
+    }
+
+    QList<TrackPoint> trackPoints;
+
+    while (query.next())
+    {
+        pkey_t id = query.value(0).toLongLong();
+        auto time = QDateTime::fromTime_t(query.value(1).toUInt());
+        auto lon = query.value(2).toDouble();
+        auto lat = query.value(3).toDouble();
+        auto elevation = query.value(4).toDouble();
+
+        trackPoints.append(TrackPoint(id, lat, lon, elevation, time, track));
+    }
+
+    return trackPoints;
+}
+
 pkey_t Repository::insert(const QString &table, const QStringList &columns, const QList<QVariant> &bindValues)
 {
     if (columns.length() != bindValues.length())
