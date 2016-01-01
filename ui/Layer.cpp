@@ -1,5 +1,7 @@
 #include "Layer.h"
 
+#include "Exception.h"
+
 #include <marble/GeoDataLineString.h>
 #include <marble/GeoDataCoordinates.h>
 #include <marble/GeoPainter.h>
@@ -16,35 +18,65 @@ QStringList Layer::renderPosition() const
     return m_renderPosition;
 }
 
+Marble::GeoDataCoordinates PointToCoordinates(const Point &point)
+{
+    return Marble::GeoDataCoordinates(
+        point.getLon(),
+        point.getLat(),
+        point.getElevation(),
+        Marble::GeoDataCoordinates::Degree);
+}
+
 bool Layer::render(
     Marble::GeoPainter *painter,
     Marble::ViewportParams *viewport,
     const QString &renderPos,
     Marble::GeoSceneLayer *layer)
 {
-    painter->setPen(QPen(QBrush(Qt::red), 3.0, Qt::SolidLine, Qt::RoundCap));
+    const qreal width = 3.0;
 
-    auto tracks = m_pRepository->getTracks();
-
-    foreach (auto track, tracks)
+    try
     {
-         auto trackPoints = m_pRepository->getTrackPoints(track);
+        painter->setPen(QPen(QBrush(Qt::red), width, Qt::SolidLine, Qt::RoundCap));
 
-         Marble::GeoDataLineString lineString;
+        auto tracks = m_pRepository->getTracks();
 
-         foreach (auto trackPoint, trackPoints)
-         {
-            lineString.append(Marble::GeoDataCoordinates(
-                trackPoint.getLon(),
-                trackPoint.getLat(),
-                trackPoint.getElevation(),
-                Marble::GeoDataCoordinates::Degree));
-         }
+        foreach (auto track, tracks)
+        {
+             auto trackPoints = m_pRepository->getTrackPoints(track);
 
-         painter->drawPolyline(
-             lineString,
-             track.getName());
+             Marble::GeoDataLineString lineString;
+
+             foreach (auto trackPoint, trackPoints)
+             {
+                lineString.append(PointToCoordinates(trackPoint));
+             }
+
+             painter->drawPolyline(lineString, track.getName());
+        }
+
+        painter->setPen(QPen(QBrush(Qt::black), width));
+
+        auto tours = m_pRepository->getTours();
+
+        foreach (auto tour, tours)
+        {
+            auto wayPoints = m_pRepository->getWayPoints(tour);
+
+            foreach (auto wayPoint, wayPoints)
+            {
+                auto coordinates = PointToCoordinates(wayPoint);
+
+                painter->drawPoint(coordinates);
+                painter->drawText(coordinates, wayPoint.getName());
+            }
+        }
+
+        return true;
     }
-
-    return true;
+    catch (Exception &exception)
+    {
+        qDebug() << exception.what();
+        return false;
+    }
 }
