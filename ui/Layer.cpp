@@ -1,8 +1,8 @@
 #include "Layer.h"
 
 #include "Exception.h"
+#include "tools.h"
 
-#include <marble/GeoDataLineString.h>
 #include <marble/GeoDataCoordinates.h>
 #include <marble/GeoPainter.h>
 
@@ -10,21 +10,13 @@ Layer::Layer(QObject *parent, Repository *pRepository) :
     QObject(parent),
     m_pRepository(pRepository)
 {
+    m_pCache = new Cache(this, pRepository);
     m_renderPosition << "SURFACE";
 }
 
 QStringList Layer::renderPosition() const
 {
     return m_renderPosition;
-}
-
-Marble::GeoDataCoordinates PointToCoordinates(const Point &point)
-{
-    return Marble::GeoDataCoordinates(
-        point.getLon(),
-        point.getLat(),
-        point.getElevation(),
-        Marble::GeoDataCoordinates::Degree);
 }
 
 bool Layer::render(
@@ -43,16 +35,9 @@ bool Layer::render(
 
         foreach (auto track, tracks)
         {
-             auto trackPoints = m_pRepository->getTrackPoints(track);
+            Marble::GeoDataLineString lineString = m_pCache->getTrackLineString(track);
 
-             Marble::GeoDataLineString lineString;
-
-             foreach (auto trackPoint, trackPoints)
-             {
-                lineString.append(PointToCoordinates(trackPoint));
-             }
-
-             painter->drawPolyline(lineString, track.getName());
+            painter->drawPolyline(lineString, track.getName());
         }
 
         painter->setPen(QPen(QBrush(Qt::black), width));

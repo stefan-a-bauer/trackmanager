@@ -34,8 +34,10 @@ set(trackmanager_SRCS
     model/Track.cpp
     model/TrackPoint.cpp
     model/WayPoint.cpp
+    ui/Cache.cpp
     ui/Layer.cpp
     ui/mainwindow.cpp
+    ui/tools.cpp
     Exception.cpp
     abstractimporter.cpp
     gpximporter.cpp
@@ -56,8 +58,10 @@ set(trackmanager_HEADERS
     model/Track.h
     model/TrackPoint.h
     model/WayPoint.h
+    ui/Cache.h
     ui/Layer.h
     ui/mainwindow.h
+    ui/tools.h
     abstractimporter.h
     Exception.h
     gpximporter.h
