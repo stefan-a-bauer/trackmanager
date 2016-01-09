@@ -505,13 +505,13 @@ QList<TrackPoint> Repository::getTrackPoints(const Track &track)
     QStringList columns;
     columns << COLUMNNAME_ID;
     columns << COLUMNNAME_TIME;
-    columns << "ST_X(p." COLUMNNAME_GEOMETRY ")";
-    columns << "ST_Y(p." COLUMNNAME_GEOMETRY ")";
-    columns << "ST_Z(p." COLUMNNAME_GEOMETRY ")";
+    columns << "ST_X(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Y(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Z(" COLUMNNAME_GEOMETRY ")";
 
     QString queryString = QString(
-        "SELECT %1 FROM " TABLE_TRACKPOINT " AS p "
-        "WHERE p." COLUMNNAME_TRACKID " = %2;").arg(columns.join(", ")).arg(track.getId());
+        "SELECT %1 FROM " TABLE_TRACKPOINT " "
+        "WHERE " COLUMNNAME_TRACKID " = %2;").arg(columns.join(", ")).arg(track.getId());
 
     QSqlQuery query(queryString);
 
@@ -542,13 +542,13 @@ QList<WayPoint> Repository::getWayPoints(const Tour &tour)
     columns << COLUMNNAME_ID;
     columns << COLUMNNAME_NAME;
     columns << COLUMNNAME_TIME;
-    columns << "ST_X(p." COLUMNNAME_GEOMETRY ")";
-    columns << "ST_Y(p." COLUMNNAME_GEOMETRY ")";
-    columns << "ST_Z(p." COLUMNNAME_GEOMETRY ")";
+    columns << "ST_X(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Y(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Z(" COLUMNNAME_GEOMETRY ")";
 
     QString queryString = QString(
-        "SELECT %1 FROM " TABLE_WAYPOINT " AS p "
-        "WHERE p." COLUMNNAME_TOURID " = %2;").arg(columns.join(", ")).arg(tour.getId());
+        "SELECT %1 FROM " TABLE_WAYPOINT " "
+        "WHERE " COLUMNNAME_TOURID " = %2;").arg(columns.join(", ")).arg(tour.getId());
 
     QSqlQuery query(queryString);
 
