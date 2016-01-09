@@ -287,6 +287,11 @@ QString doubleToString(double number)
     return QString::number(number, 'f', 9);
 }
 
+QString makePoint(double lat, double lon)
+{
+    return QString("MakePoint(%1, %2, " SRID ")").arg(doubleToString(lon)).arg(doubleToString(lat));
+}
+
 QString makePointZ(double lat, double lon, double elevation)
 {
     return QString("MakePointZ(%1, %2, %3, " SRID ")").arg(doubleToString(lon)).arg(doubleToString(lat)).arg(doubleToString(elevation));
@@ -457,7 +462,7 @@ QList<Tour> Repository::getTours()
     return tours;
 }
 
-QList<Track> Repository::getTracks()
+QList<Track> Repository::getTracks(const Box &box)
 {
     QStringList columns;
     columns << COLUMNNAME_ID;
@@ -471,7 +476,20 @@ QList<Track> Repository::getTracks()
     columns << "ST_MaxX(" COLUMNNAME_GEOMETRY ")";
     columns << "ST_MaxY(" COLUMNNAME_GEOMETRY ")";
 
-    QString queryString = QString("SELECT %1 FROM " TABLE_TRACK ";").arg(columns.join(", "));
+    QString queryString = QString(
+        "SELECT %1 "
+        "FROM " TABLE_TRACK " "
+        "WHERE ROWID IN ("
+        "SELECT ROWID "
+        "FROM SpatialIndex "
+        "WHERE "
+        "f_table_name = '" TABLE_TRACK "' "
+        "AND "
+        "search_frame = ST_Envelope(ST_Collect(%2, %3)));")
+            .arg(columns.join(", "))
+            .arg(makePoint(box.getP0().getLat(), box.getP0().getLon()))
+            .arg(makePoint(box.getP1().getLat(), box.getP1().getLon()));
+
     QSqlQuery query(queryString);
 
     if (!query.exec())

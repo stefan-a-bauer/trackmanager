@@ -33,7 +33,13 @@ bool Layer::render(
     {
         painter->setPen(QPen(QBrush(Qt::red), width, Qt::SolidLine, Qt::RoundCap));
 
-        auto tracks = m_pRepository->getTracks();
+        qreal north, south, east, west;
+
+        viewport->viewLatLonAltBox().boundaries(north, south, east, west, Marble::GeoDataCoordinates::Degree);
+
+        Box box(Position(south, west), Position(north, east));
+
+        auto tracks = m_pRepository->getTracks(box);
 
         foreach (auto track, tracks)
         {

@@ -54,7 +54,7 @@ public:
     QList<Activity> getActivities();
     QList<Gear> getGear();
     QList<Tour> getTours();
-    QList<Track> getTracks();
+    QList<Track> getTracks(const Box &box);
     QList<TrackPoint> getTrackPoints(const Track &track);
     QList<WayPoint> getWayPoints(const Tour &tour);
 
