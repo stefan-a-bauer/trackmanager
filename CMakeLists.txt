@@ -23,6 +23,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -std=c++11")
 
 set(trackmanager_SRCS
     model/Activity.cpp
+    model/Box.cpp
     model/Entity.cpp
     model/DescribedEntity.cpp
     model/Gear.cpp
@@ -47,6 +48,7 @@ set(trackmanager_SRCS
 
 set(trackmanager_HEADERS
     model/Activity.h
+    model/Box.h
     model/DescribedEntity.h
     model/Entity.h
     model/NamedEntity.h
