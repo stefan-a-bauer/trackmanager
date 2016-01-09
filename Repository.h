@@ -2,6 +2,7 @@
 #define REPOSITORY_H
 
 #include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
 #include <QVariant>
 #include "TrackPoint.h"
 #include "WayPoint.h"
@@ -60,13 +61,21 @@ public:
 
 private:
     QSqlDatabase m_db;
+    QSqlQuery *m_pGetLastRowIdQuery;
+    QSqlQuery *m_pInsertActivityQuery;
+    QSqlQuery *m_pInsertGearQuery;
+    QSqlQuery *m_pInsertTourQuery;
+    QSqlQuery *m_pInsertTrackQuery;
+    QSqlQuery *m_pInsertTrackPointQuery;
+    QSqlQuery *m_pInsertWayPointQuery;
 
     void execute(const QString &sql);
     void loadSpatialite();
     void init();
+    void prepareQueries();
     void createTable(const char *name, const char *columns);
-    pkey_t insert(const QString &table, const QStringList &columns, const QStringList &values, const QList<QVariant> &bindValues);
-    pkey_t insert(const QString &table, const QStringList &columns, const QList<QVariant> &bindValues);
+    QSqlQuery *prepareInsert(const QString &table, const QStringList &columns, const QStringList &values);
+    pkey_t insert(QSqlQuery *pQuery, const QList<QVariant> &bindValues);
 };
 
 #endif

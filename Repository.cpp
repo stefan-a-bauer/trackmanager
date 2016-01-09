@@ -6,7 +6,6 @@
 #include <QDir>
 #include <QPair>
 #include <QList>
-#include <QtSql/QSqlQuery>
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlDriver>
 #include <QtDebug>
@@ -88,6 +87,8 @@ void Repository::open()
     {
         init();
     }
+
+    prepareQueries();
 }
 
 void Repository::init()
@@ -192,8 +193,100 @@ void Repository::init()
         "END;");
 }
 
+QSqlQuery *createAndPrepareQuery(const QString &sql)
+{
+    auto pQuery = new QSqlQuery();
+
+    if (!pQuery->prepare(sql))
+    {
+        auto what = pQuery->lastError().text();
+
+        delete pQuery;
+
+        throw Exception(what);
+    }
+
+    return pQuery;
+}
+
+void Repository::prepareQueries()
+{
+    m_pGetLastRowIdQuery = createAndPrepareQuery("SELECT last_insert_rowid();");
+
+    QStringList columns;
+    QStringList values;
+
+    columns << COLUMNNAME_NAME;
+    values << "?";
+    m_pInsertActivityQuery = prepareInsert(TABLE_ACTIVITY, columns, values);
+    columns.clear();
+    values.clear();
+
+    columns << COLUMNNAME_NAME;
+    columns << COLUMNNAME_ACTIVITYID;
+    values << "?";
+    values << "?";
+    m_pInsertGearQuery = prepareInsert(TABLE_GEAR, columns, values);
+    columns.clear();
+    values.clear();
+
+    columns << COLUMNNAME_NAME;
+    columns << COLUMNNAME_DESCRIPTION;
+    values << "?";
+    values << "?";
+    m_pInsertTourQuery = prepareInsert(TABLE_TOUR, columns, values);
+    columns.clear();
+    values.clear();
+
+    columns << COLUMNNAME_NAME;
+    columns << COLUMNNAME_DESCRIPTION;
+    columns << COLUMNNAME_TOURID;
+    columns << COLUMNNAME_GEARID;
+    columns << COLUMNNAME_ACTIVITYID;
+    values << "?";
+    values << "?";
+    values << "?";
+    values << "?";
+    values << "?";
+    m_pInsertTrackQuery = prepareInsert(TABLE_TRACK, columns, values);
+    columns.clear();
+    values.clear();
+
+    QString makePointZ("MakePointZ(?, ?, ?, " SRID ")");
+
+    columns << COLUMNNAME_GEOMETRY;
+    columns << COLUMNNAME_TIME;
+    columns << COLUMNNAME_TRACKID;
+    values << makePointZ;
+    values << "?";
+    values << "?";
+    m_pInsertTrackPointQuery = prepareInsert(TABLE_TRACKPOINT, columns, values);
+    columns.clear();
+    values.clear();
+
+    columns << COLUMNNAME_NAME;
+    columns << COLUMNNAME_GEOMETRY;
+    columns << COLUMNNAME_TIME;
+    columns << COLUMNNAME_TOURID;
+    values << "?";
+    values << makePointZ;
+    values << "?";
+    values << "?";
+    m_pInsertWayPointQuery = prepareInsert(TABLE_WAYPOINT, columns, values);
+    columns.clear();
+    values.clear();
+}
+
 void Repository::close()
 {
+    delete m_pGetLastRowIdQuery;
+    delete m_pInsertActivityQuery;
+    delete m_pInsertGearQuery;
+    delete m_pInsertTourQuery;
+    delete m_pInsertTrackQuery;
+    delete m_pInsertTrackPointQuery;
+    delete m_pInsertWayPointQuery;
+
     m_db.close();
 }
 
@@ -223,39 +316,27 @@ void Repository::rollbackTransaction()
 
 pkey_t Repository::createActivity(const QString &name)
 {
-    QStringList keys;
-    keys << COLUMNNAME_NAME;
-
     QList<QVariant> values;
     values << name;
-
-    return insert(TABLE_ACTIVITY, keys, values);
+    return insert(m_pInsertActivityQuery, values);
 }
 
 pkey_t Repository::createGear(const QString &name, const Activity &activity)
 {
-    QStringList keys;
-    keys << COLUMNNAME_NAME;
-    keys << COLUMNNAME_ACTIVITYID;
-
     QList<QVariant> values;
     values << name;
     values << activity.getId();
 
-    return insert(TABLE_GEAR, keys, values);
+    return insert(m_pInsertGearQuery, values);
 }
 
 pkey_t Repository::createTour(const QString &name, const QString &description)
 {
-    QStringList keys;
-    keys << COLUMNNAME_NAME;
-    keys << COLUMNNAME_DESCRIPTION;
-
     QList<QVariant> values;
     values << name;
     values << description;
 
-    return insert(TABLE_TOUR, keys, values);
+    return insert(m_pInsertTourQuery, values);
 }
 
 pkey_t Repository::createTrack(const QString &name,
@@ -264,13 +345,6 @@ pkey_t Repository::createTrack(const QString &name,
     const Gear &gear,
     const Activity &activity)
 {
-    QStringList columns;
-    columns << COLUMNNAME_NAME;
-    columns << COLUMNNAME_DESCRIPTION;
-    columns << COLUMNNAME_TOURID;
-    columns << COLUMNNAME_GEARID;
-    columns << COLUMNNAME_ACTIVITYID;
-
     QList<QVariant> values;
     values << name;
     values << description;
@@ -278,7 +352,7 @@ pkey_t Repository::createTrack(const QString &name,
     values << gear.getId();
     values << activity.getId();
 
-    return insert(TABLE_TRACK, columns, values);
+    return insert(m_pInsertTrackQuery, values);
 }
 
 QString doubleToString(double number)
@@ -290,11 +364,6 @@ QString doubleToString(double number)
 QString makePoint(double lat, double lon)
 {
     return QString("MakePoint(%1, %2, " SRID ")").arg(doubleToString(lon)).arg(doubleToString(lat));
-}
-
-QString makePointZ(double lat, double lon, double elevation)
-{
-    return QString("MakePointZ(%1, %2, %3, " SRID ")").arg(doubleToString(lon)).arg(doubleToString(lat)).arg(doubleToString(elevation));
 }
 
 uint getSecondsSinceEpoch(const QDateTime &time)
@@ -311,21 +380,14 @@ uint getSecondsSinceEpoch(const QDateTime &time)
 
 pkey_t Repository::createTrackPoint(double lat, double lon, double elevation, const QDateTime &time, pkey_t trackId)
 {
-    QStringList columns;
-    columns << COLUMNNAME_GEOMETRY;
-    columns << COLUMNNAME_TIME;
-    columns << COLUMNNAME_TRACKID;
-
-    QStringList values;
-    values << makePointZ(lat, lon, elevation);
-    values << "?";
-    values << "?";
-
     QList<QVariant> bindValues;
+    bindValues << lon;
+    bindValues << lat;
+    bindValues << elevation;
     bindValues << getSecondsSinceEpoch(time);
     bindValues << trackId;
 
-    return insert(TABLE_TRACKPOINT, columns, values, bindValues);
+    return insert(m_pInsertTrackPointQuery, bindValues);
 }
 
 pkey_t Repository::createWayPoint(const QString &name,
@@ -335,24 +397,15 @@ pkey_t Repository::createWayPoint(const QString &name,
     const QDateTime &time,
     pkey_t tourId)
 {
-    QStringList columns;
-    columns << COLUMNNAME_NAME;
-    columns << COLUMNNAME_GEOMETRY;
-    columns << COLUMNNAME_TIME;
-    columns << COLUMNNAME_TOURID;
-
-    QStringList values;
-    values << "?";
-    values << makePointZ(lat, lon, elevation);
-    values << "?";
-    values << "?";
-
     QList<QVariant> bindValues;
     bindValues << name;
+    bindValues << lon;
+    bindValues << lat;
+    bindValues << elevation;
     bindValues << getSecondsSinceEpoch(time);
     bindValues << tourId;
 
-    return insert(TABLE_WAYPOINT, columns, values, bindValues);
+    return insert(m_pInsertWayPointQuery, bindValues);
 }
 
 QString MakeLine(const QList<Position> &geometry)
@@ -381,20 +434,27 @@ pkey_t Repository::createHighlight(
     columns << COLUMNNAME_RATING;
     columns << COLUMNNAME_ACTIVITYID;
 
-    QStringList unboundValues;
-    unboundValues << "?";
-    unboundValues << "?";
-    unboundValues << MakeLine(geometry);
-    unboundValues << "?";
-    unboundValues << "?";
+    QStringList values;
+    values << "?";
+    values << "?";
+    values << MakeLine(geometry);
+    values << "?";
+    values << "?";
 
-    QList<QVariant> values;
-    values << name;
-    values << description;
-    values << rating;
-    values << activity.getId();
+    // We cannot reuse this query because the number of nodes in the geometry is not a constant
+    auto pQuery = prepareInsert(TABLE_HIGHLIGHT, columns, values);
 
-    return insert(TABLE_HIGHLIGHT, columns, unboundValues, values);
+    QList<QVariant> bindValues;
+    bindValues << name;
+    bindValues << description;
+    bindValues << rating;
+    bindValues << activity.getId();
+
+    auto id = insert(pQuery, bindValues);
+
+    delete pQuery;
+
+    return id;
 }
 
 QList<Activity> Repository::getActivities()
@@ -592,71 +652,51 @@ QList<WayPoint> Repository::getWayPoints(const Tour &tour)
     return wayPoints;
 }
 
-pkey_t Repository::insert(const QString &table, const QStringList &columns, const QList<QVariant> &bindValues)
-{
-    if (columns.length() != bindValues.length())
-    {
-        throw std::invalid_argument(
-            QString("Could not insert row into toable '%1'. The number of columns (%2) does not match the number of values (%3).")
-                .arg(table)
-                .arg(columns.length())
-                .arg(bindValues.length())
-                .toStdString());
-    }
-
-    QStringList values;
-
-    for (int i = 0; i < columns.length(); i++)
-    {
-        values.append("?");
-    }
-
-    return insert(table, columns, values, bindValues);
-}
-
-
-pkey_t Repository::insert(const QString &table, const QStringList &columns, const QStringList &values, const QList<QVariant> &bindValues)
+QSqlQuery *Repository::prepareInsert(const QString &table, const QStringList &columns, const QStringList &values)
 {
     if (columns.length() != values.length())
     {
         throw std::invalid_argument(
-            QString("Could not insert row into toable '%1'. The number of columns (%2) does not match the number of values (%3).")
+            QString("Could not prepare insert into table '%1'. The number of columns (%2) does not match the number of values (%3).")
                 .arg(table)
                 .arg(columns.length())
-                .arg(bindValues.length())
+                .arg(values.length())
                 .toStdString());
     }
 
     QString sql = QString("INSERT INTO %1 (%2) VALUES (%3)").arg(table).arg(columns.join(", ")).arg(values.join(", "));
 
-    QSqlQuery query;
+    return createAndPrepareQuery(sql);
+}
 
-    if (!query.prepare(sql))
+pkey_t Repository::insert(QSqlQuery *pQuery, const QList<QVariant> &bindValues)
+{
+    if (pQuery == NULL)
     {
-        throw Exception(query.lastError().text());
+        throw std::invalid_argument("pQuery is NULL.");
     }
 
     foreach (const QVariant &value, bindValues)
     {
-        query.addBindValue(value);
+        pQuery->addBindValue(value);
     }
 
-    if (!query.exec())
+    if (!pQuery->exec())
     {
-        throw Exception(query.lastError().text());
+        throw Exception(pQuery->lastError().text());
     }
 
-    if (!query.exec("SELECT last_insert_rowid();"))
+    if (!m_pGetLastRowIdQuery->exec())
     {
-        throw Exception(query.lastError().text());
+        throw Exception(m_pGetLastRowIdQuery->lastError().text());
     }
 
-    if (!query.next())
+    if (!m_pGetLastRowIdQuery->next())
     {
         throw Exception(std::string("Could not get the id of the last inserted row."));
     }
 
-    return query.value(0).toLongLong();
+    return m_pGetLastRowIdQuery->value(0).toLongLong();
 }
 
 void Repository::createTable(const char *name, const char *columns)
