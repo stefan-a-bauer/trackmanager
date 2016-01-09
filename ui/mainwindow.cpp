@@ -8,6 +8,14 @@
 #include "Exception.h"
 #include "Layer.h"
 
+
+#define SETTINGS_VIEW "View"
+
+#define SETTINGS_LAST_IMPORT_DIRECTORY "lastImportDirectory"
+#define SETTINGS_VIEW_RANGE "range"
+#define SETTINGS_VIEW_COORDINATES "coordinates"
+
+
 MainWindow::MainWindow(Repository *repository, AbstractImporter *importer)
 {
     m_repository = repository;
@@ -20,6 +28,9 @@ MainWindow::MainWindow(Repository *repository, AbstractImporter *importer)
 
     auto layer = new Layer(this, repository);
 
+    // restore the view before wiring up the layer to avoid senseless loading of tracks for the default view
+    RestoreView();
+
     connect(m_marble, SIGNAL(zoomChanged(int)), layer, SLOT(onZoomChanged(int)));
 
     m_marble->addLayer(layer);
@@ -30,21 +41,37 @@ MainWindow::MainWindow(Repository *repository, AbstractImporter *importer)
     m_fileMenu->addAction(m_importAction);
 }
 
+MainWindow::~MainWindow()
+{
+    auto lookAt = m_marble->lookAt();
+
+    auto range = lookAt.range();
+    auto coordinates = lookAt.coordinates();
+
+    QSettings settings;
+
+    settings.beginGroup(SETTINGS_VIEW);
+    settings.setValue(SETTINGS_VIEW_RANGE, range);
+    settings.setValue(SETTINGS_VIEW_COORDINATES, coordinates.toString());
+    settings.endGroup();
+
+    delete m_marble;
+    m_marble = NULL;
+}
+
 void MainWindow::import()
 {
     try
     {
         QSettings settings;
 
-        QString lastImportedFileKey = "lastImportedFile";
+        QString lastImportDirectory = settings.value(SETTINGS_LAST_IMPORT_DIRECTORY).toString();
 
-        QString lastImportedFile = settings.value(lastImportedFileKey).toString();
-
-        QString fileName = QFileDialog::getOpenFileName(this, tr("Select file to import"), lastImportedFile);
+        QString fileName = QFileDialog::getOpenFileName(this, tr("Select file to import"), lastImportDirectory);
 
         if (!fileName.isEmpty())
         {
-            settings.setValue(lastImportedFileKey, fileName);
+            settings.setValue(SETTINGS_LAST_IMPORT_DIRECTORY, QFileInfo(fileName).canonicalPath());
 
             QList<Activity> activities = m_repository->getActivities();
 
@@ -71,4 +98,37 @@ void MainWindow::import()
     {
         QMessageBox::critical(this, tr("Failed to import file"), exception.what());
     }
+}
+
+void MainWindow::RestoreView()
+{
+    bool ok;
+
+    QSettings settings;
+
+    settings.beginGroup(SETTINGS_VIEW);
+
+    auto coordinatesString = settings.value(SETTINGS_VIEW_COORDINATES).toString();
+    auto coordinates = Marble::GeoDataCoordinates::fromString(coordinatesString, ok);
+
+    if (!ok)
+    {
+        return;
+    }
+
+    auto range = settings.value(SETTINGS_VIEW_RANGE).toReal(&ok);
+
+    settings.endGroup();
+
+    if (!ok)
+    {
+        return;
+    }
+
+    Marble::GeoDataLookAt lookAt;
+
+    lookAt.setCoordinates(coordinates);
+    lookAt.setRange(range);
+
+    m_marble->flyTo(lookAt, Marble::FlyToMode::Jump);
 }

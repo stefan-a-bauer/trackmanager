@@ -16,11 +16,14 @@ public:
     MainWindow(
             Repository *repository,
             AbstractImporter *importer);
+    virtual ~MainWindow();
 
 private slots:
     void import();
 
 private:
+    void RestoreView();
+
     Repository *m_repository;
     AbstractImporter *m_importer;
 
