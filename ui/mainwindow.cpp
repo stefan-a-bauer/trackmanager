@@ -32,6 +32,11 @@ MainWindow::MainWindow(Repository *repository, AbstractImporter *importer)
     RestoreView();
 
     connect(m_marble, SIGNAL(zoomChanged(int)), layer, SLOT(onZoomChanged(int)));
+    connect(
+        m_marble,
+        SIGNAL(visibleLatLonAltBoxChanged(GeoDataLatLonAltBox)),
+        layer,
+        SLOT(onVisibleLatLonAltBoxChanged(GeoDataLatLonAltBox)));
 
     m_marble->addLayer(layer);
 

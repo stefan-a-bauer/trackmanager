@@ -21,6 +21,7 @@ public:
 
 public slots:
     void onZoomChanged(int newZoom);
+    void onVisibleLatLonAltBoxChanged(const Marble::GeoDataLatLonAltBox &box);
 
 private:
     QStringList m_renderPosition;
@@ -28,6 +29,7 @@ private:
     Cache *m_pCache;
     QHash<pkey_t, Marble::GeoDataLineString> m_cache;
     int m_zoom;
+    Marble::GeoDataLatLonAltBox m_box;
 };
 
 #endif

@@ -75,3 +75,8 @@ void Layer::onZoomChanged(int newZoom)
 {
     m_zoom = newZoom;
 }
+
+void Layer::onVisibleLatLonAltBoxChanged(const Marble::GeoDataLatLonAltBox &box)
+{
+    m_box = box;
+}
