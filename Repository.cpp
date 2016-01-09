@@ -153,6 +153,41 @@ void Repository::init()
     execute("SELECT AddGeometryColumn('" TABLE_TRACKPOINT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POINTZ', 'XYZ');");
     execute("SELECT AddGeometryColumn('" TABLE_WAYPOINT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POINTZ', 'XYZ');");
     execute("SELECT AddGeometryColumn('" TABLE_HIGHLIGHT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'LINESTRING', 'XY');");
+    execute("SELECT AddGeometryColumn('" TABLE_TRACK "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POLYGON', 'XY');");
+
+    execute(
+        "CREATE TRIGGER recalculate_track_bbox_on_insert "
+        "AFTER INSERT ON " TABLE_TRACKPOINT " "
+        "FOR EACH ROW "
+        "BEGIN "
+        "    UPDATE " TABLE_TRACK " "
+        "    SET " COLUMNNAME_GEOMETRY " =  "
+        "        CASE  "
+        "        WHEN " COLUMNNAME_GEOMETRY " IS NULL THEN ST_Envelope(NEW." COLUMNNAME_GEOMETRY ") "
+        "        ELSE ST_Envelope(ST_Collect(" COLUMNNAME_GEOMETRY ", NEW." COLUMNNAME_GEOMETRY ")) "
+        "        END "
+        "    WHERE " COLUMNNAME_ID " = NEW." COLUMNNAME_TRACKID "; "
+        "END;");
+
+    execute(
+        "CREATE TRIGGER recalculate_track_bbox_on_delete "
+        "AFTER DELETE ON " TABLE_TRACKPOINT " "
+        "FOR EACH ROW "
+        "BEGIN "
+        "    UPDATE " TABLE_TRACK " "
+        "    SET " COLUMNNAME_GEOMETRY " = (SELECT ST_Envelope(ST_Collect(" COLUMNNAME_GEOMETRY ")) FROM " TABLE_TRACKPOINT " WHERE " COLUMNNAME_TRACKID " = OLD." COLUMNNAME_TRACKID ") "
+        "    WHERE " COLUMNNAME_ID " = OLD." COLUMNNAME_TRACKID "; "
+        "END;");
+
+    execute(
+        "CREATE TRIGGER recalculate_track_bbox_on_update "
+        "AFTER UPDATE OF " COLUMNNAME_GEOMETRY " ON " TABLE_TRACKPOINT " "
+        "FOR EACH ROW "
+        "BEGIN "
+        "    UPDATE " TABLE_TRACK " "
+        "    SET " COLUMNNAME_GEOMETRY " = (SELECT ST_Envelope(ST_Collect(" COLUMNNAME_GEOMETRY ")) FROM " TABLE_TRACKPOINT " WHERE " COLUMNNAME_TRACKID " = OLD." COLUMNNAME_TRACKID ") "
+        "    WHERE " COLUMNNAME_ID " = OLD." COLUMNNAME_TRACKID "; "
+        "END;");
 }
 
 void Repository::close()
