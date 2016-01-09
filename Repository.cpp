@@ -155,6 +155,8 @@ void Repository::init()
     execute("SELECT AddGeometryColumn('" TABLE_HIGHLIGHT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'LINESTRING', 'XY');");
     execute("SELECT AddGeometryColumn('" TABLE_TRACK "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POLYGON', 'XY');");
 
+    execute("SELECT CreateSpatialIndex('" TABLE_TRACK "', '" COLUMNNAME_GEOMETRY "');");
+
     execute(
         "CREATE TRIGGER recalculate_track_bbox_on_insert "
         "AFTER INSERT ON " TABLE_TRACKPOINT " "
