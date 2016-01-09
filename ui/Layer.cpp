@@ -5,6 +5,7 @@
 
 #include <marble/GeoDataCoordinates.h>
 #include <marble/GeoPainter.h>
+#include <marble/ViewportParams.h>
 
 Layer::Layer(QObject *parent, Repository *pRepository) :
     QObject(parent),
@@ -26,6 +27,7 @@ bool Layer::render(
     Marble::GeoSceneLayer *layer)
 {
     const qreal width = 3.0;
+    const int minZoomForWayPoints = 2200;
 
     try
     {
@@ -37,23 +39,26 @@ bool Layer::render(
         {
             Marble::GeoDataLineString lineString = m_pCache->getTrackLineString(track);
 
-            painter->drawPolyline(lineString, track.getName());
+            painter->drawPolyline(lineString);
         }
 
-        painter->setPen(QPen(QBrush(Qt::black), width));
-
-        auto tours = m_pRepository->getTours();
-
-        foreach (auto tour, tours)
+        if (m_zoom > minZoomForWayPoints)
         {
-            auto wayPoints = m_pRepository->getWayPoints(tour);
+            painter->setPen(QPen(QBrush(Qt::black), width));
 
-            foreach (auto wayPoint, wayPoints)
+            auto tours = m_pRepository->getTours();
+
+            foreach (auto tour, tours)
             {
-                auto coordinates = PointToCoordinates(wayPoint);
+                auto wayPoints = m_pRepository->getWayPoints(tour);
 
-                painter->drawPoint(coordinates);
-                painter->drawText(coordinates, wayPoint.getName());
+                foreach (auto wayPoint, wayPoints)
+                {
+                    auto coordinates = PointToCoordinates(wayPoint);
+
+                    painter->drawPoint(coordinates);
+                    painter->drawText(coordinates, wayPoint.getName());
+                }
             }
         }
 
@@ -64,4 +69,9 @@ bool Layer::render(
         qDebug() << exception.what();
         return false;
     }
+}
+
+void Layer::onZoomChanged(int newZoom)
+{
+    m_zoom = newZoom;
 }

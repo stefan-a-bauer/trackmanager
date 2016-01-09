@@ -19,6 +19,9 @@ MainWindow::MainWindow(Repository *repository, AbstractImporter *importer)
     setCentralWidget(m_marble);
 
     auto layer = new Layer(this, repository);
+
+    connect(m_marble, SIGNAL(zoomChanged(int)), layer, SLOT(onZoomChanged(int)));
+
     m_marble->addLayer(layer);
 
     m_importAction = new QAction(tr("&Import..."), this);

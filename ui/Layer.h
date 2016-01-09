@@ -8,6 +8,8 @@
 
 class Layer : public QObject, public Marble::LayerInterface
 {
+    Q_OBJECT
+
 public:
     Layer(QObject *parent, Repository *pRepository);
     QStringList renderPosition() const;
@@ -17,11 +19,15 @@ public:
         const QString &renderPos,
         Marble::GeoSceneLayer *layer);
 
+public slots:
+    void onZoomChanged(int newZoom);
+
 private:
     QStringList m_renderPosition;
     Repository *m_pRepository;
     Cache *m_pCache;
     QHash<pkey_t, Marble::GeoDataLineString> m_cache;
+    int m_zoom;
 };
 
 #endif
