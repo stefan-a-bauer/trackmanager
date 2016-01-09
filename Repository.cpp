@@ -459,7 +459,20 @@ QList<Tour> Repository::getTours()
 
 QList<Track> Repository::getTracks()
 {
-    QSqlQuery query(QString("SELECT * FROM " TABLE_TRACK ";"));
+    QStringList columns;
+    columns << COLUMNNAME_ID;
+    columns << COLUMNNAME_NAME;
+    columns << COLUMNNAME_DESCRIPTION;
+    columns << COLUMNNAME_TOURID;
+    columns << COLUMNNAME_GEARID;
+    columns << COLUMNNAME_ACTIVITYID;
+    columns << "ST_MinX(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_MinY(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_MaxX(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_MaxY(" COLUMNNAME_GEOMETRY ")";
+
+    QString queryString = QString("SELECT %1 FROM " TABLE_TRACK ";").arg(columns.join(", "));
+    QSqlQuery query(queryString);
 
     if (!query.exec())
     {
@@ -476,7 +489,12 @@ QList<Track> Repository::getTracks()
         pkey_t tourId = query.value(3).toLongLong();
         pkey_t gearId = query.value(4).toLongLong();
         pkey_t activityId = query.value(5).toLongLong();
-        tracks.append(Track(id, name, description, tourId, gearId, activityId));
+        auto lon0 = query.value(6).toDouble();
+        auto lat0 = query.value(7).toDouble();
+        auto lon1 = query.value(8).toDouble();
+        auto lat1 = query.value(9).toDouble();
+        Box box(Position(lat0, lon0), Position(lat1, lon1));
+        tracks.append(Track(id, name, description, tourId, gearId, activityId, box));
     }
 
     return tracks;

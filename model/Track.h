@@ -4,6 +4,7 @@
 #include "Tour.h"
 #include "Gear.h"
 #include "Activity.h"
+#include "Box.h"
 
 class Track : public DescribedEntity
 {
@@ -14,7 +15,8 @@ public:
         const QString &description,
         pkey_t tourId,
         pkey_t gearId,
-        pkey_t activityId);
+        pkey_t activityId,
+        const Box &box);
 
     ~Track();
 
@@ -33,10 +35,16 @@ public:
         return m_activityId;
     }
 
+    const Box &getBox() const
+    {
+        return m_box;
+    }
+
 private:
     pkey_t m_tourId;
     pkey_t m_gearId;
     pkey_t m_activityId;
+    Box m_box;
 };
 
 #endif
