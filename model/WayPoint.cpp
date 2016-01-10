@@ -6,10 +6,10 @@ WayPoint::WayPoint(pkey_t id,
     double lon,
     double elevation,
     const QDateTime &time,
-    const Tour &tour) :
+    pkey_t tourId) :
     NamedEntity(id, name),
     Point(lat, lon, elevation, time),
-    m_tourId(tour.getId())
+    m_tourId(tourId)
 {
 }
 

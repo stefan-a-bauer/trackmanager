@@ -52,19 +52,14 @@ bool Layer::render(
         {
             painter->setPen(QPen(QBrush(Qt::black), width));
 
-            auto tours = m_pRepository->getTours();
+            auto wayPoints = m_pRepository->getWayPoints(box);
 
-            foreach (auto tour, tours)
+            foreach (auto wayPoint, wayPoints)
             {
-                auto wayPoints = m_pRepository->getWayPoints(tour);
+                auto coordinates = PointToCoordinates(wayPoint);
 
-                foreach (auto wayPoint, wayPoints)
-                {
-                    auto coordinates = PointToCoordinates(wayPoint);
-
-                    painter->drawPoint(coordinates);
-                    painter->drawText(coordinates, wayPoint.getName());
-                }
+                painter->drawPoint(coordinates);
+                painter->drawText(coordinates, wayPoint.getName());
             }
         }
 

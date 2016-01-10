@@ -156,6 +156,7 @@ void Repository::init()
     execute("SELECT AddGeometryColumn('" TABLE_HIGHLIGHT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'LINESTRING', 'XY');");
     execute("SELECT AddGeometryColumn('" TABLE_TRACK "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POLYGON', 'XY');");
 
+    execute("SELECT CreateSpatialIndex('" TABLE_WAYPOINT "', '" COLUMNNAME_GEOMETRY "');");
     execute("SELECT CreateSpatialIndex('" TABLE_TRACK "', '" COLUMNNAME_GEOMETRY "');");
 
     execute(
@@ -207,6 +208,44 @@ QSqlQuery *createAndPrepareQuery(const QString &sql)
     }
 
     return pQuery;
+}
+
+QSqlQuery *prepareInsert(const QString &table, const QStringList &columns, const QStringList &values)
+{
+    if (columns.length() != values.length())
+    {
+        throw std::invalid_argument(
+            QString("Could not prepare insert into table '%1'. The number of columns (%2) does not match the number of values (%3).")
+                .arg(table)
+                .arg(columns.length())
+                .arg(values.length())
+                .toStdString());
+    }
+
+    QString sql = QString("INSERT INTO %1 (%2) VALUES (%3)").arg(table).arg(columns.join(", ")).arg(values.join(", "));
+
+    return createAndPrepareQuery(sql);
+}
+
+QSqlQuery *prepareSpatialSelect(const QString &table, const QStringList &columns)
+{
+    QString makePoint("MakePoint(?, ?, " SRID ")");
+
+    auto sql = QString(
+        "SELECT %1 "
+        "FROM %2 "
+        "WHERE ROWID IN ("
+        "SELECT ROWID "
+        "FROM SpatialIndex "
+        "WHERE "
+        "f_table_name = '%2' "
+        "AND "
+        "search_frame = ST_Envelope(ST_Collect(%3, %3)));")
+            .arg(columns.join(", "))
+            .arg(table)
+            .arg(makePoint);
+
+    return createAndPrepareQuery(sql);
 }
 
 void Repository::prepareQueries()
@@ -275,6 +314,29 @@ void Repository::prepareQueries()
     m_pInsertWayPointQuery = prepareInsert(TABLE_WAYPOINT, columns, values);
     columns.clear();
     values.clear();
+
+    columns << COLUMNNAME_ID;
+    columns << COLUMNNAME_NAME;
+    columns << COLUMNNAME_DESCRIPTION;
+    columns << COLUMNNAME_TOURID;
+    columns << COLUMNNAME_GEARID;
+    columns << COLUMNNAME_ACTIVITYID;
+    columns << "ST_MinX(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_MinY(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_MaxX(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_MaxY(" COLUMNNAME_GEOMETRY ")";
+    m_pGetTracksQuery = prepareSpatialSelect(TABLE_TRACK, columns);
+    columns.clear();
+
+    columns << COLUMNNAME_ID;
+    columns << COLUMNNAME_NAME;
+    columns << COLUMNNAME_TIME;
+    columns << COLUMNNAME_TOURID;
+    columns << "ST_X(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Y(" COLUMNNAME_GEOMETRY ")";
+    columns << "ST_Z(" COLUMNNAME_GEOMETRY ")";
+    m_pGetWayPointsQuery = prepareSpatialSelect(TABLE_WAYPOINT, columns);
+    columns.clear();
 }
 
 void Repository::close()
@@ -286,6 +348,8 @@ void Repository::close()
     delete m_pInsertTrackQuery;
     delete m_pInsertTrackPointQuery;
     delete m_pInsertWayPointQuery;
+    delete m_pGetTracksQuery;
+    delete m_pGetWayPointsQuery;
 
     m_db.close();
 }
@@ -522,55 +586,53 @@ QList<Tour> Repository::getTours()
     return tours;
 }
 
+void bindAndExecute(QSqlQuery *pQuery, const QList<QVariant> &bindValues)
+{
+    if (pQuery == NULL)
+    {
+        throw std::invalid_argument("pQuery is NULL.");
+    }
+
+    foreach (const QVariant &value, bindValues)
+    {
+        pQuery->addBindValue(value);
+    }
+
+    if (!pQuery->exec())
+    {
+        throw Exception(pQuery->lastError().text());
+    }
+}
+
+void bindAndExecuteSpatialSelect(QSqlQuery *pQuery, const Box &box)
+{
+    QList<QVariant> bindValues;
+    bindValues << box.getP0().getLon();
+    bindValues << box.getP0().getLat();
+    bindValues << box.getP1().getLon();
+    bindValues << box.getP1().getLat();
+
+    bindAndExecute(pQuery, bindValues);
+}
+
 QList<Track> Repository::getTracks(const Box &box)
 {
-    QStringList columns;
-    columns << COLUMNNAME_ID;
-    columns << COLUMNNAME_NAME;
-    columns << COLUMNNAME_DESCRIPTION;
-    columns << COLUMNNAME_TOURID;
-    columns << COLUMNNAME_GEARID;
-    columns << COLUMNNAME_ACTIVITYID;
-    columns << "ST_MinX(" COLUMNNAME_GEOMETRY ")";
-    columns << "ST_MinY(" COLUMNNAME_GEOMETRY ")";
-    columns << "ST_MaxX(" COLUMNNAME_GEOMETRY ")";
-    columns << "ST_MaxY(" COLUMNNAME_GEOMETRY ")";
-
-    QString queryString = QString(
-        "SELECT %1 "
-        "FROM " TABLE_TRACK " "
-        "WHERE ROWID IN ("
-        "SELECT ROWID "
-        "FROM SpatialIndex "
-        "WHERE "
-        "f_table_name = '" TABLE_TRACK "' "
-        "AND "
-        "search_frame = ST_Envelope(ST_Collect(%2, %3)));")
-            .arg(columns.join(", "))
-            .arg(makePoint(box.getP0().getLat(), box.getP0().getLon()))
-            .arg(makePoint(box.getP1().getLat(), box.getP1().getLon()));
-
-    QSqlQuery query(queryString);
-
-    if (!query.exec())
-    {
-        throw Exception(query.lastError().text());
-    }
+    bindAndExecuteSpatialSelect(m_pGetTracksQuery, box);
 
     QList<Track> tracks;
 
-    while (query.next())
+    while (m_pGetTracksQuery->next())
     {
-        pkey_t id = query.value(0).toLongLong();
-        QString name = query.value(1).toString();
-        QString description = query.value(2).toString();
-        pkey_t tourId = query.value(3).toLongLong();
-        pkey_t gearId = query.value(4).toLongLong();
-        pkey_t activityId = query.value(5).toLongLong();
-        auto lon0 = query.value(6).toDouble();
-        auto lat0 = query.value(7).toDouble();
-        auto lon1 = query.value(8).toDouble();
-        auto lat1 = query.value(9).toDouble();
+        pkey_t id = m_pGetTracksQuery->value(0).toLongLong();
+        QString name = m_pGetTracksQuery->value(1).toString();
+        QString description = m_pGetTracksQuery->value(2).toString();
+        pkey_t tourId = m_pGetTracksQuery->value(3).toLongLong();
+        pkey_t gearId = m_pGetTracksQuery->value(4).toLongLong();
+        pkey_t activityId = m_pGetTracksQuery->value(5).toLongLong();
+        auto lon0 = m_pGetTracksQuery->value(6).toDouble();
+        auto lat0 = m_pGetTracksQuery->value(7).toDouble();
+        auto lon1 = m_pGetTracksQuery->value(8).toDouble();
+        auto lat1 = m_pGetTracksQuery->value(9).toDouble();
         Box box(Position(lat0, lon0), Position(lat1, lon1));
         tracks.append(Track(id, name, description, tourId, gearId, activityId, box));
     }
@@ -614,77 +676,31 @@ QList<TrackPoint> Repository::getTrackPoints(const Track &track)
     return trackPoints;
 }
 
-QList<WayPoint> Repository::getWayPoints(const Tour &tour)
+QList<WayPoint> Repository::getWayPoints(const Box &box)
 {
-    QStringList columns;
-    columns << COLUMNNAME_ID;
-    columns << COLUMNNAME_NAME;
-    columns << COLUMNNAME_TIME;
-    columns << "ST_X(" COLUMNNAME_GEOMETRY ")";
-    columns << "ST_Y(" COLUMNNAME_GEOMETRY ")";
-    columns << "ST_Z(" COLUMNNAME_GEOMETRY ")";
-
-    QString queryString = QString(
-        "SELECT %1 FROM " TABLE_WAYPOINT " "
-        "WHERE " COLUMNNAME_TOURID " = %2;").arg(columns.join(", ")).arg(tour.getId());
-
-    QSqlQuery query(queryString);
-
-    if (!query.exec())
-    {
-        throw Exception(query.lastError().text());
-    }
+    bindAndExecuteSpatialSelect(m_pGetWayPointsQuery, box);
 
     QList<WayPoint> wayPoints;
 
-    while (query.next())
+    while (m_pGetWayPointsQuery->next())
     {
-        pkey_t id = query.value(0).toLongLong();
-        auto name = query.value(1).toString();
-        auto time = QDateTime::fromTime_t(query.value(2).toUInt());
-        auto lon = query.value(3).toDouble();
-        auto lat = query.value(4).toDouble();
-        auto elevation = query.value(5).toDouble();
+        pkey_t id = m_pGetWayPointsQuery->value(0).toLongLong();
+        auto name = m_pGetWayPointsQuery->value(1).toString();
+        auto time = QDateTime::fromTime_t(m_pGetWayPointsQuery->value(2).toUInt());
+        auto tourId = m_pGetWayPointsQuery->value(3).toLongLong();
+        auto lon = m_pGetWayPointsQuery->value(4).toDouble();
+        auto lat = m_pGetWayPointsQuery->value(5).toDouble();
+        auto elevation = m_pGetWayPointsQuery->value(6).toDouble();
 
-        wayPoints.append(WayPoint(id, name, lat, lon, elevation, time, tour));
+        wayPoints.append(WayPoint(id, name, lat, lon, elevation, time, tourId));
     }
 
     return wayPoints;
 }
 
-QSqlQuery *Repository::prepareInsert(const QString &table, const QStringList &columns, const QStringList &values)
-{
-    if (columns.length() != values.length())
-    {
-        throw std::invalid_argument(
-            QString("Could not prepare insert into table '%1'. The number of columns (%2) does not match the number of values (%3).")
-                .arg(table)
-                .arg(columns.length())
-                .arg(values.length())
-                .toStdString());
-    }
-
-    QString sql = QString("INSERT INTO %1 (%2) VALUES (%3)").arg(table).arg(columns.join(", ")).arg(values.join(", "));
-
-    return createAndPrepareQuery(sql);
-}
-
 pkey_t Repository::insert(QSqlQuery *pQuery, const QList<QVariant> &bindValues)
 {
-    if (pQuery == NULL)
-    {
-        throw std::invalid_argument("pQuery is NULL.");
-    }
-
-    foreach (const QVariant &value, bindValues)
-    {
-        pQuery->addBindValue(value);
-    }
-
-    if (!pQuery->exec())
-    {
-        throw Exception(pQuery->lastError().text());
-    }
+    bindAndExecute(pQuery, bindValues);
 
     if (!m_pGetLastRowIdQuery->exec())
     {

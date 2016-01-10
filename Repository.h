@@ -57,7 +57,7 @@ public:
     QList<Tour> getTours();
     QList<Track> getTracks(const Box &box);
     QList<TrackPoint> getTrackPoints(const Track &track);
-    QList<WayPoint> getWayPoints(const Tour &tour);
+    QList<WayPoint> getWayPoints(const Box &box);
 
 private:
     QSqlDatabase m_db;
@@ -68,13 +68,14 @@ private:
     QSqlQuery *m_pInsertTrackQuery;
     QSqlQuery *m_pInsertTrackPointQuery;
     QSqlQuery *m_pInsertWayPointQuery;
+    QSqlQuery *m_pGetTracksQuery;
+    QSqlQuery *m_pGetWayPointsQuery;
 
     void execute(const QString &sql);
     void loadSpatialite();
     void init();
     void prepareQueries();
     void createTable(const char *name, const char *columns);
-    QSqlQuery *prepareInsert(const QString &table, const QStringList &columns, const QStringList &values);
     pkey_t insert(QSqlQuery *pQuery, const QList<QVariant> &bindValues);
 };
 

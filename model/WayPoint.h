@@ -14,7 +14,7 @@ public:
         double lon,
         double elevation,
         const QDateTime &time,
-        const Tour &tour);
+        pkey_t tourId);
 
     ~WayPoint();
 
