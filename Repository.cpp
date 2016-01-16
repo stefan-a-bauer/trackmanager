@@ -430,31 +430,20 @@ QString makePoint(double lat, double lon)
     return QString("MakePoint(%1, %2, " SRID ")").arg(doubleToString(lon)).arg(doubleToString(lat));
 }
 
-uint getSecondsSinceEpoch(const QDateTime &time)
-{
-    uint secondsSinceEpoch = time.toTime_t();
-
-    if ((int)secondsSinceEpoch < 0)
-    {
-        throw std::range_error(QString("The date '%s' is out of range.").arg(time.toString()).toStdString());
-    }
-
-    return secondsSinceEpoch;
-}
-
 pkey_t Repository::createTrackPoint(double lat, double lon, double elevation, const QDateTime &time, pkey_t trackId)
 {
     QList<QVariant> bindValues;
     bindValues << lon;
     bindValues << lat;
     bindValues << elevation;
-    bindValues << getSecondsSinceEpoch(time);
+    bindValues << time.toMSecsSinceEpoch();
     bindValues << trackId;
 
     return insert(m_pInsertTrackPointQuery, bindValues);
 }
 
-pkey_t Repository::createWayPoint(const QString &name,
+pkey_t Repository::createWayPoint(
+    const QString &name,
     double lat,
     double lon,
     double elevation,
@@ -466,7 +455,7 @@ pkey_t Repository::createWayPoint(const QString &name,
     bindValues << lon;
     bindValues << lat;
     bindValues << elevation;
-    bindValues << getSecondsSinceEpoch(time);
+    bindValues << time.toMSecsSinceEpoch();
     bindValues << tourId;
 
     return insert(m_pInsertWayPointQuery, bindValues);
@@ -665,7 +654,7 @@ QList<TrackPoint> Repository::getTrackPoints(const Track &track)
     while (query.next())
     {
         pkey_t id = query.value(0).toLongLong();
-        auto time = QDateTime::fromTime_t(query.value(1).toUInt());
+        auto time = QDateTime::fromMSecsSinceEpoch(query.value(1).toLongLong());
         auto lon = query.value(2).toDouble();
         auto lat = query.value(3).toDouble();
         auto elevation = query.value(4).toDouble();
@@ -686,7 +675,7 @@ QList<WayPoint> Repository::getWayPoints(const Box &box)
     {
         pkey_t id = m_pGetWayPointsQuery->value(0).toLongLong();
         auto name = m_pGetWayPointsQuery->value(1).toString();
-        auto time = QDateTime::fromTime_t(m_pGetWayPointsQuery->value(2).toUInt());
+        auto time = QDateTime::fromMSecsSinceEpoch(m_pGetWayPointsQuery->value(2).toLongLong());
         auto tourId = m_pGetWayPointsQuery->value(3).toLongLong();
         auto lon = m_pGetWayPointsQuery->value(4).toDouble();
         auto lat = m_pGetWayPointsQuery->value(5).toDouble();
