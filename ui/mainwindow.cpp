@@ -96,7 +96,7 @@ void MainWindow::import()
                 gear = m_repository->getGear();
             }
 
-            m_importer->Import(*m_repository, fileName, gear.first(), activity);
+            m_importer->import(*m_repository, fileName, gear.first(), activity);
         }
     }
     catch (Exception &exception)

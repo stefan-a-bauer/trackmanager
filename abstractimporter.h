@@ -11,7 +11,7 @@ public:
     AbstractImporter();
     virtual ~AbstractImporter();
 
-    virtual pkey_t Import(Repository &repository, const QString &fileName, const Gear &gear, const Activity &activity) = 0;
+    virtual pkey_t import(Repository &repository, const QString &fileName, const Gear &gear, const Activity &activity) = 0;
 };
 
 #endif // ABSTRACTIMPORTER_H

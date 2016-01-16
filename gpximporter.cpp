@@ -94,7 +94,7 @@ QDateTime parseTime(const QDomElement &element)
     return time;
 }
 
-void parseWayPoint(Repository &repository, const QDomElement &element, pkey_t tourId)
+void GpxImporter::parseWayPoint(Repository &repository, const QDomElement &element, pkey_t tourId)
 {
     auto name = parseName(element);
     auto lat = parseLat(element);
@@ -105,17 +105,28 @@ void parseWayPoint(Repository &repository, const QDomElement &element, pkey_t to
     repository.createWayPoint(name, lat, lon, elevation, time, tourId);
 }
 
-void ParseTrackPoint(Repository &repository, const QDomElement &element, pkey_t trackId)
+void GpxImporter::parseTrackPoint(Repository &repository, const QDomElement &element, pkey_t trackId)
 {
     auto lat = parseLat(element);
     auto lon = parseLon(element);
     auto elevation = parseElevation(element);
     auto time = parseTime(element);
 
-    repository.createTrackPoint(lat, lon, elevation, time, trackId);
+    if (time > m_lastTime)
+    {
+        repository.createTrackPoint(lat, lon, elevation, time, trackId);
+        m_lastTime = time;
+    }
+    else
+    {
+        throw Exception(QString("The time %1 of the track point at %2 is not greater than the previous track point's time %3.")
+            .arg(time.toString())
+            .arg(getPositionString(element))
+            .arg(m_lastTime.toString()));
+    }
 }
 
-void ParseTrack(Repository &repository, const QDomElement &element, pkey_t tourId, const Gear &gear, const Activity &activity)
+void GpxImporter::parseTrack(Repository &repository, const QDomElement &element, pkey_t tourId, const Gear &gear, const Activity &activity)
 {
     QDomElement nameElement = element.firstChildElement("name");
     QDomElement descriptionElement = element.firstChildElement("desc");
@@ -129,12 +140,12 @@ void ParseTrack(Repository &repository, const QDomElement &element, pkey_t tourI
     {
         for (QDomElement point = seg.firstChildElement(ELEMENT_TRKPT); !point.isNull(); point = point.nextSiblingElement(ELEMENT_TRKPT))
         {
-            ParseTrackPoint(repository, point, trackId);
+            parseTrackPoint(repository, point, trackId);
         }
     }
 }
 
-pkey_t GpxImporter::Import(Repository &repository, const QString &fileName, const Gear &gear, const Activity &activity)
+pkey_t GpxImporter::import(Repository &repository, const QString &fileName, const Gear &gear, const Activity &activity)
 {
     QDomDocument document;
     QFile file(fileName);
@@ -166,9 +177,11 @@ pkey_t GpxImporter::Import(Repository &repository, const QString &fileName, cons
             parseWayPoint(repository, wpt, tourId);
         }
 
+        m_lastTime.setTime_t(0);
+
         for (QDomElement trk = documentElement.firstChildElement(ELEMENT_TRK); !trk.isNull(); trk = trk.nextSiblingElement(ELEMENT_TRK))
         {
-            ParseTrack(repository, trk, tourId, gear, activity);
+            parseTrack(repository, trk, tourId, gear, activity);
         }
 
         repository.commitTransaction();
