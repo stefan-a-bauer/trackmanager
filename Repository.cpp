@@ -151,10 +151,10 @@ void Repository::init()
         createTable(table.first, table.second);
     }
 
-    execute("SELECT AddGeometryColumn('" TABLE_TRACKPOINT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POINTZ', 'XYZ');");
-    execute("SELECT AddGeometryColumn('" TABLE_WAYPOINT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POINTZ', 'XYZ');");
-    execute("SELECT AddGeometryColumn('" TABLE_HIGHLIGHT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'LINESTRING', 'XY');");
-    execute("SELECT AddGeometryColumn('" TABLE_TRACK "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POLYGON', 'XY');");
+    execute("SELECT AddGeometryColumn('" TABLE_TRACKPOINT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POINTZ', 'XYZ', 1);");
+    execute("SELECT AddGeometryColumn('" TABLE_WAYPOINT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POINTZ', 'XYZ', 1);");
+    execute("SELECT AddGeometryColumn('" TABLE_HIGHLIGHT "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'LINESTRING', 'XY', 1);");
+    execute("SELECT AddGeometryColumn('" TABLE_TRACK "', '" COLUMNNAME_GEOMETRY "', " SRID ", 'POLYGON', 'XY', 1);");
 
     execute("SELECT CreateSpatialIndex('" TABLE_WAYPOINT "', '" COLUMNNAME_GEOMETRY "');");
     execute("SELECT CreateSpatialIndex('" TABLE_TRACK "', '" COLUMNNAME_GEOMETRY "');");

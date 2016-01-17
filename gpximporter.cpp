@@ -67,7 +67,10 @@ double parseElevation(const QDomElement &element)
 
     if (!ok)
     {
-        elevation = NAN;
+        throw Exception(
+            QString(
+                "The point at %1 has no valid elevation.")
+                .arg(getPositionString(element)));
     }
 
     return elevation;
