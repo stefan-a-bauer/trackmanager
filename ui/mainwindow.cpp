@@ -21,34 +21,52 @@ MainWindow::MainWindow(Repository *repository, AbstractImporter *importer)
     m_repository = repository;
     m_importer = importer;
 
-    m_marble = new Marble::MarbleWidget();
-    m_marble->setProjection(Marble::Mercator);
-    m_marble->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
-    setCentralWidget(m_marble);
+    m_controlView = new ControlView(this);
+
+    m_controlView->marbleWidget()->setProjection(Marble::Mercator);
+    m_controlView->marbleWidget()->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
+
+    setCentralWidget(m_controlView);
+
+    auto panelActions = m_controlView->setupDockWidgets(this);
+    createMenus(panelActions);
 
     auto layer = new Layer(this, repository);
 
     // restore the view before wiring up the layer to avoid senseless loading of tracks for the default view
     RestoreView();
 
-    connect(m_marble, SIGNAL(zoomChanged(int)), layer, SLOT(onZoomChanged(int)));
+    connect(m_controlView->marbleWidget(), SIGNAL(zoomChanged(int)), layer, SLOT(onZoomChanged(int)));
     connect(
-        m_marble,
+        m_controlView->marbleWidget(),
         SIGNAL(visibleLatLonAltBoxChanged(GeoDataLatLonAltBox)),
         layer,
         SLOT(onVisibleLatLonAltBoxChanged(GeoDataLatLonAltBox)));
 
-    m_marble->addLayer(layer);
+    m_controlView->marbleWidget()->addLayer(layer);
+}
 
+void MainWindow::createMenus(const QList<QAction *> &panelActions)
+{
     m_importAction = new QAction(tr("&Import..."), this);
     connect(m_importAction, SIGNAL(triggered()), this, SLOT(import()));
     m_fileMenu = menuBar()->addMenu(tr("&File"));
     m_fileMenu->addAction(m_importAction);
+
+    m_panelMenu = new QMenu("&Panels");
+
+    foreach(QAction* action, panelActions)
+    {
+        m_panelMenu->addAction( action );
+    }
+
+    m_settingsMenu = menuBar()->addMenu(tr("&Settings"));
+    m_settingsMenu->addMenu( m_panelMenu );
 }
 
 MainWindow::~MainWindow()
 {
-    auto lookAt = m_marble->lookAt();
+    auto lookAt = m_controlView->marbleWidget()->lookAt();
 
     auto range = lookAt.range();
     auto coordinates = lookAt.coordinates();
@@ -60,8 +78,8 @@ MainWindow::~MainWindow()
     settings.setValue(SETTINGS_VIEW_COORDINATES, coordinates.toString());
     settings.endGroup();
 
-    delete m_marble;
-    m_marble = NULL;
+    delete m_controlView;
+    m_controlView = NULL;
 }
 
 void MainWindow::import()
@@ -135,5 +153,5 @@ void MainWindow::RestoreView()
     lookAt.setCoordinates(coordinates);
     lookAt.setRange(range);
 
-    m_marble->flyTo(lookAt, Marble::FlyToMode::Jump);
+    m_controlView->marbleWidget()->flyTo(lookAt, Marble::FlyToMode::Jump);
 }

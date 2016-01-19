@@ -3,10 +3,10 @@
 
 #include <QAction>
 #include <QMainWindow>
-#include <marble/MarbleWidget.h>
 
 #include "abstractimporter.h"
 #include "Repository.h"
+#include "ControlView.h"
 
 class MainWindow : public QMainWindow
 {
@@ -22,14 +22,17 @@ private slots:
     void import();
 
 private:
+    void createMenus(const QList<QAction*> &panelActions);
     void RestoreView();
 
     Repository *m_repository;
     AbstractImporter *m_importer;
 
-    Marble::MarbleWidget *m_marble;
+    ControlView *m_controlView;
     QMenu *m_fileMenu;
     QAction *m_importAction;
+    QMenu *m_settingsMenu;
+    QMenu *m_panelMenu;
 };
 
 #endif // MAINWINDOW_H

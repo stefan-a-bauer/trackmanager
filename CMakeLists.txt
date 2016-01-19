@@ -18,6 +18,7 @@ include_directories(
     ${Qt5Widgets_INCLUDE_DIRS}
     ${Qt5Xml_INCLUDE_DIRS}
     ${MARBLE_INCLUDE_DIR}
+    ${MARBLE_INCLUDE_DIR}/marble
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS} -fexceptions -std=c++11")
@@ -37,6 +38,7 @@ set(trackmanager_SRCS
     model/TrackPoint.cpp
     model/WayPoint.cpp
     ui/Cache.cpp
+    ui/ControlView.cpp
     ui/Layer.cpp
     ui/mainwindow.cpp
     ui/tools.cpp
@@ -62,6 +64,7 @@ set(trackmanager_HEADERS
     model/TrackPoint.h
     model/WayPoint.h
     ui/Cache.h
+    ui/ControlView.h
     ui/Layer.h
     ui/mainwindow.h
     ui/tools.h
